@@ -80,7 +80,7 @@ postsRouter.patch('/:postId', requireUser, async (req, res, next) => {
       })
     }
   } catch ({ name, message }) {
-    next({ name, message });
+    next({ name, message })
   }
 });
 
@@ -106,5 +106,4 @@ postsRouter.delete('/:postId', requireUser, async (req, res, next) => {
     next({ name, message })
   }
 });
-
 module.exports = postsRouter;
