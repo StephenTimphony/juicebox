@@ -1,8 +1,11 @@
 const express = require('express');
 const usersRouter = express.Router();
-const { getAllUsers } = require('../db');
 const jwt = require('jsonwebtoken');
-const { getUserByUsername, createUser } = require('../db/index');
+const { 
+  getAllUsers,
+  getUserByUsername,
+  createUser
+ } = require('../db');
 
 usersRouter.use((req, res, next) => {
   console.log("A request is being made to /users");
@@ -10,24 +13,18 @@ usersRouter.use((req, res, next) => {
   next();
 });
 
-usersRouter.get('/', async (req,res) => {
-    const users = await getAllUsers();
-    
-    res.send({
-        users
-    });
-    fetch('apiRouter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer HOLYMOLEYTHISTOKENISHUGE'
-      },
-      body: JSON.stringify({})
-    })
+usersRouter.get('/', async (req, res) => {
+  const users = await getAllUsers();
+
+  res.send({
+    users
+  });
 });
 
 usersRouter.post('/login', async (req, res, next) => {
   const { username, password } = req.body;
+
+  // request must have both
   if (!username || !password) {
     next({
       name: "MissingCredentialsError",
@@ -37,17 +34,21 @@ usersRouter.post('/login', async (req, res, next) => {
 
   try {
     const user = await getUserByUsername(username);
+    console.log(user)
 
-    if (user && user.password == password) {
-      const token = jwt.sign( user , process.env.JWT_SECRET);
-      res.send({ message: "you're logged in!", token });      
+    if (user && user.password == password) {      
+      const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET );
+      res.send({ 
+        message: "you're logged in!",
+        token: token        
+      });
     } else {
       next({ 
         name: 'IncorrectCredentialsError', 
         message: 'Username or password is incorrect'
       });
     }
-  } catch({message: error}) {
+  } catch(error) {
     console.log(error);
     next(error);
   }
@@ -85,7 +86,9 @@ usersRouter.post('/register', async (req, res, next) => {
       token 
     });
   } catch ({ name, message }) {
-    next({ name, message })
+    next({ 
+      name: "CreatingUserError", 
+      message: "There was an error creating a new user" })
   } 
 });
 
